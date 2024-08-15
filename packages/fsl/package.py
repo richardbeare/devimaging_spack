@@ -23,11 +23,11 @@
 from spack.package import *
 import os
 
-class Fslinstaller(Package):
+class Fsl(Package):
     """FSL prebuilt"""
 
     # FIXME: Add a proper url for your package's homepage here.
-    homepage = "https://www.example.com"
+    homepage = "https://fsl.fmrib.ox.ac.uk/"
     url = "https://fsl.fmrib.ox.ac.uk/fsldownloads/fslconda/releases/fslinstaller.py"
 
     # FIXME: Add a list of GitHub accounts to
