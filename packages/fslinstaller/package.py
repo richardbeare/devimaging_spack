@@ -39,8 +39,12 @@ class Fslinstaller(Package):
     # the license, set checked_by to your Github username.
     license("UNKNOWN", checked_by="github_user1")
 
-    # FIXME: Add proper versions and checksums here.
-    version("6.0.7.12", "ee0b6cefbf9a2a4596fa1bc21a32ecbff40af833fca532600c4106cee29360f2" ,expand = False)
+    # We're fetching the installer, which is the same for all versions - i.e 
+    # a common checksum. Doesn't appear to be a way of disabling at this level,
+    # perhaps from the spack commandline
+    checksum = "ee0b6cefbf9a2a4596fa1bc21a32ecbff40af833fca532600c4106cee29360f2"
+    version("6.0.6.5", checksum, expand = False)
+    version("6.0.7.12", checksum ,expand = False)
 
     # FIXME: Add dependencies if required.
     depends_on("miniconda3", type = ("build", "run"))
@@ -53,7 +57,7 @@ class Fslinstaller(Package):
                 "-s",
                 "-m",
                 "--fslversion",
-                "6.0.7.12",
+                str(self.version),
                 "--miniconda",
                 self.spec["miniconda3"].prefix,
                 "--dest",
