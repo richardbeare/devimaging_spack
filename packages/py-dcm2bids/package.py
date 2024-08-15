@@ -48,4 +48,4 @@ class PyDcm2bids(PythonPackage):
     # depends_on("foo")
     depends_on("python@3.11", type = ("build", "run"), when="@3.2.0:")
     depends_on("py-setuptools", type="build")
-
+    depends_on("dcm2niix", type="run")
