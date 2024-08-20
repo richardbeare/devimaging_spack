@@ -21,7 +21,10 @@
 # ----------------------------------------------------------------------------
 
 from spack.package import *
+from spack.util.environment import EnvironmentModifications
+
 import os
+import stat
 
 class Fsl(Package):
     """FSL prebuilt"""
@@ -42,7 +45,7 @@ class Fsl(Package):
     # We're fetching the installer, which is the same for all versions - i.e 
     # a common checksum. Doesn't appear to be a way of disabling at this level,
     # perhaps from the spack commandline
-    checksum = "ee0b6cefbf9a2a4596fa1bc21a32ecbff40af833fca532600c4106cee29360f2"
+    checksum = "ea53c1821c7e397668ea7be6cb1417ee55bdf565c7600fdff7d9b05597418e52"
     version("6.0.6.5", checksum, expand = False)
     version("6.0.7.12", checksum ,expand = False)
 
@@ -66,13 +69,16 @@ class Fsl(Package):
                 join_path(self.prefix, "FSL", "envs")]
         install_shell = which("python3")
         install_shell(*arguments)
+        fslsetup = join_path(self.prefix, "FSL", "etc", "fslconf", "fsl.sh")
+        os.chmod(fslsetup, stat.S_IXGRP | stat.S_IXUSR | stat.S_IXOTH | stat.S_IRGRP | stat.S_IRUSR | stat.S_IROTH
 
     def setup_run_environment(self, env):
         # Set the environment variables after copying tree
         env.set("FSLDIR", join_path(self.prefix, "FSL"))
         env.prepend_path("PATH", join_path(self.prefix, "FSL", "share", "fsl", "bin"))
-        fslsetup = join_path(self.prefix, "etc", "fslconf", "fsl.sh")
-
+        fslsetup = join_path(self.prefix, "FSL", "etc", "fslconf", "fsl.sh")
+        print(fslsetup)
         if os.path.isfile(fslsetup):
+            # needs to be executable
             env.extend(EnvironmentModifications.from_sourcing_file(fslsetup))
 
