@@ -70,7 +70,7 @@ class Fsl(Package):
         install_shell = which("python3")
         install_shell(*arguments)
         fslsetup = join_path(self.prefix, "FSL", "etc", "fslconf", "fsl.sh")
-        os.chmod(fslsetup, stat.S_IXGRP | stat.S_IXUSR | stat.S_IXOTH | stat.S_IRGRP | stat.S_IRUSR | stat.S_IROTH
+        os.chmod(fslsetup, stat.S_IXGRP | stat.S_IXUSR | stat.S_IXOTH | stat.S_IRGRP | stat.S_IRUSR | stat.S_IROTH)
 
     def setup_run_environment(self, env):
         # Set the environment variables after copying tree
