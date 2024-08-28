@@ -50,7 +50,7 @@ class Fsl(Package):
     version("6.0.7.12", checksum ,expand = False)
 
     # FIXME: Add dependencies if required.
-    depends_on("miniconda3", type = ("build", "run"))
+    depends_on("miniconda3", type = ("build"))
 
     def install(self, spec, prefix):
         # FIXME: Unknown build system
