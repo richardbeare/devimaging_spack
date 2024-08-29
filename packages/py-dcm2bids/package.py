@@ -43,9 +43,10 @@ class PyDcm2bids(PythonPackage):
 
     version("3.2.0", sha256="f04a6d0fea604901fc71495a91bf78f4acd9cf5d4d9af1d3b51ba47616c02407")
     version("3.1.1", sha256="c9ee032d8b488e632820d050fd5fbad8c9d062a7722b1d43fdef74d535b02d05")
-
+    version("2.1.6", sha256="deb9538f51bd1650e6d487bdc812b7330aabf9f5be9a674fc7f51d9e746896be")
     # FIXME: Add dependencies if required.
     # depends_on("foo")
     depends_on("python@3.11", type = ("build", "run"), when="@3.2.0:")
+    depends_on("python@3.9", type = ("build", "run"), when="@2.1.6:")
     depends_on("py-setuptools", type="build")
     depends_on("dcm2niix", type="run")
