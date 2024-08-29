@@ -30,14 +30,14 @@ class Mrtrix3tissue(Package):
     depends_on("glu")
     depends_on("qt+opengl@4.7:")
     # MRTrix <= 3.0.3 can't build with eigen >= 3.4 due to conflicting declarations
-    depends_on("eigen@3.3", when="@3.0.3")
-    depends_on("eigen@3.4:", when="@3.0.4:")
+    depends_on("eigen@3.3", when="@5.2.9")
     depends_on("zlib-api")
     depends_on("libtiff")
     depends_on("fftw")
 
-    #patch("fix_includes.patch", when="@3.0.3:3.0.4")
+    patch("fix_includes.patch", when="@5.2.9")
 
+    # from original mrtrix3 - not sure if we'll ever need it
     conflicts("%gcc@7:", when="@2017-09-25")  # MRtrix3/mrtrix3#1041
 
     def install(self, spec, prefix):
