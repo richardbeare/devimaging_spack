@@ -19,7 +19,7 @@ class Mrtrix3(CMakePackage, Package):
 
     license("MPL-2.0")
 
-    version("master", branch="master", get_full_repo=True))
+    version("master", branch="master", get_full_repo=True)
     version("dev", branch="dev", get_full_repo=True)
 
     version(
