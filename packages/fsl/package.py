@@ -77,7 +77,6 @@ class Fsl(Package):
         env.set("FSLDIR", join_path(self.prefix, "FSL"))
         env.prepend_path("PATH", join_path(self.prefix, "FSL", "share", "fsl", "bin"))
         fslsetup = join_path(self.prefix, "FSL", "etc", "fslconf", "fsl.sh")
-        print(fslsetup)
         if os.path.isfile(fslsetup):
             # needs to be executable
             env.extend(EnvironmentModifications.from_sourcing_file(fslsetup))
