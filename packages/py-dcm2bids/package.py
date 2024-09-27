@@ -47,6 +47,6 @@ class PyDcm2bids(PythonPackage):
     # FIXME: Add dependencies if required.
     # depends_on("foo")
     depends_on("python@3.11", type = ("build", "run"), when="@3.2.0:")
-    depends_on("python@3.9", type = ("build", "run"), when="@2.1.6:")
+    depends_on("python@3.9", type = ("build", "run"), when="@2.1.6")
     depends_on("py-setuptools", type="build")
     depends_on("dcm2niix", type="run")
