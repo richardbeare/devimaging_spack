@@ -74,11 +74,14 @@ class Fsl(Package):
 
     def setup_run_environment(self, env):
         # Set the environment variables after copying tree
-        env.set("FSLDIR", join_path(self.prefix, "FSL"))
-        env.prepend_path("PATH", join_path(self.prefix, "FSL", "bin"))
-        env.prepend_path("PATH", join_path(self.prefix, "FSL", "share", "fsl", "bin"))
-        fslsetup = join_path(self.prefix, "FSL", "etc", "fslconf", "fsl.sh")
+        fsldir = join_path(self.prefix, "FSL")
+        os.environ['FSLDIR'] = fsldir
+        env.prepend_path("PATH", join_path(fsldir, "bin"))
+        env.prepend_path("PATH", join_path(fsldir, "share", "fsl", "bin"))
+        fslsetup = join_path(fsldir, "etc", "fslconf", "fsl.sh")
         if os.path.isfile(fslsetup):
             # needs to be executable
             env.extend(EnvironmentModifications.from_sourcing_file(fslsetup))
 
+        del os.environ['FSLDIR'] 
+        env.set("FSLDIR", fsldir)
