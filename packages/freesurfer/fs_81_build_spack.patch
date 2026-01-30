@@ -1,0 +1,220 @@
+diff --git a/anatomicuts/CMakeLists.txt b/anatomicuts/CMakeLists.txt
+index 4c742a42ee..0c70b5f57e 100644
+--- a/anatomicuts/CMakeLists.txt
++++ b/anatomicuts/CMakeLists.txt
+@@ -27,7 +27,7 @@ if(VTK_FOUND)
+ 
+   set(TRACKIO ../freeview/track_io/TrackIO.cpp)
+ 
+-  set(ITK_LIBRARIES "ITKCommon;ITKIOImageBase;ITKIOBMP;ITKIOBioRad;ITKIOBruker;ITKIOGDCM;ITKIOGE;ITKIONRRD;ITKIOTIFF;ITKIOVTK;ITKIOStimulate;ITKIONIFTI;ITKIOMINC;ITKIOGIPL;ITKIOHDF5;ITKIOJPEG;ITKIOLSM;ITKIOMRC;ITKIOMeta;ITKIOPNG")
++  #set(ITK_LIBRARIES "ITKCommon;ITKIOImageBase;ITKIOBMP;ITKIOBioRad;ITKIOBruker;ITKIOGDCM;ITKIOGE;ITKIONRRD;ITKIOTIFF;ITKIOVTK;ITKIOStimulate;ITKIONIFTI;ITKIOGIPL;ITKIOHDF5;ITKIOJPEG;ITKIOLSM;ITKIOMRC;ITKIOMeta;ITKIOPNG")
+   if(HOST_OS MATCHES "CentOS9stream" OR HOST_OS MATCHES "Rocky9" OR (HOST_OS MATCHES "Ubuntu22" AND HOST_OS_GCC_VERSION MATCHES "11"))
+     set(ITK_LIBRARIES "${ITK_LIBRARIES};ITKIOJPEG2000")
+   elseif(HOST_OS MATCHES "Rocky8" AND HOST_OS_GCC_VERSION MATCHES "10")
+diff --git a/nmovie_qt/CMakeLists.txt b/nmovie_qt/CMakeLists.txt
+index a06c0bb262..31ada15a18 100644
+--- a/nmovie_qt/CMakeLists.txt
++++ b/nmovie_qt/CMakeLists.txt
+@@ -16,9 +16,9 @@ if(BUILD_GUIS)
+   add_executable(nmovie_qt ${SOURCES})
+ 
+   if(Qt6_DIR)
+-    target_link_libraries(nmovie_qt Qt6::Core Qt6::Widgets)
++    target_link_libraries(nmovie_qt Qt6::Core Qt6::Widgets ${ITK_LIBRARIES})
+   elseif(Qt5_DIR)
+-    target_link_libraries(nmovie_qt Qt5::Core Qt5::Widgets)
++    target_link_libraries(nmovie_qt Qt5::Core Qt5::Widgets ${ITK_LIBRARIES})
+   endif()
+ 
+   install(TARGETS nmovie_qt DESTINATION bin)
+diff --git a/packages/CMakeLists.txt b/packages/CMakeLists.txt
+index 785454d5b7..c8fbee7c5b 100644
+--- a/packages/CMakeLists.txt
++++ b/packages/CMakeLists.txt
+@@ -9,7 +9,6 @@ add_subdirectories(
+   jpeg
+   expat
+   glut
+-  xml2
+   minc
+   dicom
+   dcm2niix
+diff --git a/packages/build_packages.py b/packages/build_packages.py
+index 80d37fa728..2611ef46f3 100755
+--- a/packages/build_packages.py
++++ b/packages/build_packages.py
+@@ -48,11 +48,13 @@ class Package:
+ # Package('itk',         '4.13.0', 'build_itk.sh',       'itk-4.13.0.tar.gz'),
+ 
+ pkgs = [
+-  Package('itk',         '4.13.2', 'build_itk.sh',       'itk-4.13.2.tar.gz'),
++  #Package('itk',         '4.13.2', 'build_itk.sh',       'itk-4.13.2.tar.gz'),
++  Package('itk',         '5.4.5', 'build_itk.sh',       'itk-5.4.5.tar.gz'),
+   Package('petsc',       '2.3.3',  'build_petsc.sh',     'petsc-2.3.3.tar.gz', required=False),
+   Package('ann',         '1.1.2',  'build_ann.sh',       'ann-1.1.2.tar.gz', required=False),
+   Package('gts',         '0.7.6',  'build_gts.sh',       'gts-0.7.6.tar.gz', required=False),
+-  Package('vtk',         '7.1',    'build_vtk.sh',       'vtk-7.1.1.tar.gz', required=False)
++  Package('vtk',         '8.2',    'build_vtk.sh',       'vtk-8.2.0.tar.gz', required=False)
++  #Package('vtk',         '7.1',    'build_vtk.sh',       'vtk-7.1.1.tar.gz', required=False)
+ ]
+ 
+ # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@@ -130,7 +132,7 @@ for package in pkgs:
+   if ret != 0: exit(ret)
+ 
+   # run the build script
+-  ret = subprocess.call('%s %s' % (package.script, package_dir), shell=True)
++  ret = subprocess.call('%s %s' % (package.script, package_dir), shell=True, stderr=sys.stdout)
+   if ret == 0:
+     # if the build runs smoothly, save the tarball MD5
+     with open(md5_filename, "w") as f: f.write(md5_current)
+diff --git a/packages/source/build_itk.sh b/packages/source/build_itk.sh
+index 3d14260c52..35f7797178 100755
+--- a/packages/source/build_itk.sh
++++ b/packages/source/build_itk.sh
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash -x
++#!/usr/bin/env -S bash -x 
+ 
+ set -e
+ 
+@@ -38,8 +38,6 @@ cmake ../ITK \
+   -DCMAKE_BUILD_TYPE:STRING=Release \
+   -DCMAKE_CXX_FLAGS:STRING="${CXXFLAGS}" \
+   -DCMAKE_C_FLAGS:STRING="${CFLAGS}" \
+-  -DCMAKE_CXX_STANDARD:STRING=11 \
+-  -DCMAKE_C_STANDARD:STRING=11 \
+   -DITK_BUILD_DEFAULT_MODULES:BOOL=OFF \
+   -DITKGroup_Core:BOOL=ON \
+   -DITKGroup_Filtering:BOOL=ON \
+diff --git a/packages/source/build_petsc.sh b/packages/source/build_petsc.sh
+index b432d284a3..803c490c8b 100755
+--- a/packages/source/build_petsc.sh
++++ b/packages/source/build_petsc.sh
+@@ -18,7 +18,7 @@ export PETSC_DIR=$(pwd)
+ python2 config/configure.py \
+   --with-debugging=no \
+   --download-f-blas-lapack=0 \
+-  --download-mpich=1 \
++  --download-mpich=/tmp/FS/mpich2-1.0.5p4.tar.gz\
+   --with-mpi=1 \
+   --with-x=0 \
+   --with-gnu-copyright-code=0 \
+diff --git a/packages/source/build_vtk.sh b/packages/source/build_vtk.sh
+index a862ed40c9..979115d00d 100755
+--- a/packages/source/build_vtk.sh
++++ b/packages/source/build_vtk.sh
+@@ -1,7 +1,7 @@
+ #!/usr/bin/env bash
+ 
+ set -e
+-
++set -x
+ [ "$#" != "1" ] && echo "error: usage: build.sh <prefix>" && exit 1
+ INSTALL_DIR="$1"
+ 
+@@ -29,14 +29,14 @@ fi
+ # with at least that level of support
+ # -DCMAKE_CXX_STANDARD:STRING=14 or 17 as dictated
+ # by the compiler.
+-cmake ../VTK-7.1.1 $EXTRA_OPTIONS \
++#cmake ../VTK-7.1.1 $EXTRA_OPTIONS \
++cmake ../VTK $EXTRA_OPTIONS \
+   -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR} \
+   -DCMAKE_BUILD_TYPE:STRING=Release \
++  -DBUILD_TESTING=OFF \
+   -DCMAKE_CXX_FLAGS:STRING="${CXXFLAGS}" \
+   -DCMAKE_C_FLAGS:STRING="${CFLAGS}" \
+-  -DCMAKE_CXX_STANDARD:STRING=11 \
+-  -DCMAKE_C_STANDARD:STRING=11 \
+-  -DVTK_RENDERING_BACKEND:STRING=OpenGL
++  -DVTK_RENDERING_BACKEND:STRING=OpenGL2
+ 
+ cmake --build . --target all -j 8
+ cmake --build . --target install
+diff --git a/python/req.sh b/python/req.sh
+index 159d4e881d..2ca6e79b36 100755
+--- a/python/req.sh
++++ b/python/req.sh
+@@ -139,6 +139,7 @@ fi
+ python_binary="$FSPYTHON_INSTALL_PREFIX/python/bin/python3"
+ # nvidia_subdir="$install_path/python/lib/python3.8/site-packages/nvidia"
+ nvidia_subdir="$FSPYTHON_INSTALL_PREFIX/python/lib/python3.8/site-packages/nvidia"
++python_library="$FSPYTHON_INSTALL_PREFIX/python/packages"
+ 
+ if [ $generate -eq 1 ]; then
+    # If requirements files not soft links and modified, then stop and do not clobber
+@@ -180,7 +181,7 @@ if [ $generate -eq 1 ]; then
+    # $python_binary -m pip freeze | sort | uniq | sed 's; @ ;@;g' | sed 's;^qatools.*;#&;' | sed 's;^pyfs.*;#&;' | sed 's;^nvidia.*;#&;' | sed 's;^triton.*;#&;' | sed 's;voxelmorph==.*;'${voxelmorph_url_when_version_invalid}';' | sed 's;neurite==.*;'${neurite_url_when_version_invalid}';' | sed 's;pystrum==.*;'${pystrum_url_when_version_invalid}';' > $build_req_new
+ 
+    ## need URL for spheremorph and addition of fsutil breaks solving requirements
+-   $python_binary -m pip freeze | sort | uniq | sed 's; @ ;@;g' | sed 's;^qatools.*;#&;' | sed 's;^pyfs.*;#&;' | sed 's;^nvidia.*;#&;' | sed 's;^triton.*;#&;' | sed 's;^fsutil.*;#&;' | sed 's;voxelmorph==.*;'${voxelmorph_url_when_version_invalid}';' | sed 's;neurite==.*;'${neurite_url_when_version_invalid}';' | sed 's;pystrum==.*;'${pystrum_url_when_version_invalid}';' | sed 's;spheremorph==.*;'${spheremorph_url_when_version_invalid}';' | sed 's;^torch==.*cpu;--find-links '${torch_cpu_url}'\n&;' > $build_req_new
++   $python_binary -m pip freeze  --path $python_library| sort | uniq | sed 's; @ ;@;g' | sed 's;^qatools.*;#&;' | sed 's;^pyfs.*;#&;' | sed 's;^nvidia.*;#&;' | sed 's;^triton.*;#&;' | sed 's;^fsutil.*;#&;' | sed 's;voxelmorph==.*;'${voxelmorph_url_when_version_invalid}';' | sed 's;neurite==.*;'${neurite_url_when_version_invalid}';' | sed 's;pystrum==.*;'${pystrum_url_when_version_invalid}';' | sed 's;spheremorph==.*;'${spheremorph_url_when_version_invalid}';' | sed 's;^torch==.*cpu;--find-links '${torch_cpu_url}'\n&;' > $build_req_new
+ 
+    if [ $(wc -l < $build_req_new) -eq 0 ]; then
+       echo "$s: $build_req_new has no entries so cannot use it to update requirements-build.txt"
+@@ -281,8 +282,10 @@ if [ $torchcpu -eq 1 ]; then
+    ## Does not look like there is a way to specify the latest version of the torch cpu package
+    ## in requirements-extra.txt, e.g., torch==*.cpu
+    # func_setup_fspython
+-   torch_rev=`$python_binary -m pip freeze | grep torch | sed 's;^.*==;;'`
++   torch_rev=`$python_binary -m pip freeze --path $python_library | grep torch | sed 's;^.*==;;'`
++   echo "torch_rev: $torch_rev"
+    torch_rev_numeric=`echo $torch_rev| sed 's;\+.*;;'`
++   echo "torch_rev_numeric: $torch_rev_numeric"
+    if [ "${torch_rev}" == "${torch_rev_numeric}+cpu" ]; then
+       echo "$s: ${torch_rev} already installed - nothing to do."
+    else
+@@ -312,11 +315,11 @@ if [ $uninstall -eq 1 ]; then
+    ## remove triton
+    ## replace torch with torch+cpu version (no cuda libs) via --libtorch arg above
+    # $python_binary -m pip freeze | grep "^nvidia\|^triton\|^torch" > /dev/null
+-   $python_binary -m pip freeze | grep "^nvidia\|^triton" > /dev/null
++   $python_binary -m pip freeze  --path $python_library| grep "^nvidia\|^triton" > /dev/null
+    if [ $? -eq 0 ]; then
+       if [ ! -e ./postinstall.list ]; then touch postinstall.list; fi
+       # $python_binary -m pip freeze | grep '^nvidia\|^triton\|^torch' | sed 's;==.*;;' >> postinstall.list
+-      $python_binary -m pip freeze | grep '^nvidia\|^triton' | sed 's;==.*;;' >> postinstall.list
++      $python_binary -m pip freeze --path $python_library | grep '^nvidia\|^triton' | sed 's;==.*;;' >> postinstall.list
+    else
+       echo "$s: Found nothing to uninstall for nvidia and triton in output from pip freeze."
+    fi
+@@ -363,10 +366,10 @@ if [ $uninstall -eq 1 ]; then
+       fi
+    fi
+ 
+-   $python_binary -m pip freeze | grep "^tensorflow" > /dev/null
++   $python_binary -m pip freeze  --path $python_library| grep "^tensorflow" > /dev/null
+    if [ $? -eq 0 ]; then
+       echo "$s tensorflow modulues currently installed:"
+-      $python_binary -m pip freeze | grep "^tensorflow"
++      $python_binary -m pip freeze  --path $python_library| grep "^tensorflow"
+    else
+       echo "$s: Found no tensorflow modules installed - exiting."
+       exit 1
+diff --git a/resurf/CMakeLists.txt b/resurf/CMakeLists.txt
+index 1060ff9505..08f1525e33 100644
+--- a/resurf/CMakeLists.txt
++++ b/resurf/CMakeLists.txt
+@@ -23,7 +23,7 @@ if(ITK_FOUND AND VTK_FOUND)
+ 
+   set(TRACKIO ../freeview/track_io/TrackIO.cpp)
+ 
+-  set(ITK_LIBRARIES "ITKCommon;ITKIOImageBase;ITKIOBMP;ITKIOBioRad;ITKIOBruker;ITKIOGDCM;ITKIOGE;ITKIONRRD;ITKIOTIFF;ITKIOVTK;ITKIOStimulate;ITKIOMINC;ITKIOGIPL;ITKIOHDF5;ITKIOJPEG;ITKIOLSM;ITKIOMRC;ITKIOMeta;ITKIOPNG;ITKIONIFTI")
++  #set(ITK_LIBRARIES "ITKCommon;ITKIOImageBase;ITKIOBMP;ITKIOBioRad;ITKIOBruker;ITKIOGDCM;ITKIOGE;ITKIONRRD;ITKIOTIFF;ITKIOVTK;ITKIOStimulate;ITKIOGIPL;ITKIOHDF5;ITKIOJPEG2000;ITKIOMeshVTK;ITKIOJPEG;ITKIOLSM;ITKIOMRC;ITKIOMeta;ITKIOPNG;ITKIONIFTI")
+   if((HOST_OS MATCHES "CentOS9" OR HOST_OS MATCHES "CentOS9stream" OR HOST_OS MATCHES "Rocky9" OR HOST_OS MATCHES "Ubuntu22") AND HOST_OS_GCC_VERSION MATCHES "11")
+     set(ITK_LIBRARIES "${ITK_LIBRARIES};ITKIOJPEG2000;ITKIOMeshVTK")
+   elseif(HOST_OS MATCHES "Rocky8" AND HOST_OS_GCC_VERSION MATCHES "10")
+diff --git a/talairach_avi/CMakeLists.txt b/talairach_avi/CMakeLists.txt
+index a790d0e079..fa458e0a3e 100644
+--- a/talairach_avi/CMakeLists.txt
++++ b/talairach_avi/CMakeLists.txt
+@@ -12,7 +12,7 @@ else()
+     if(HOST_OS MATCHES "CentOS9stream")
+       set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -ffixed-line-length-132 -fno-second-underscore -fallow-invalid-boz -std=legacy")
+     else()  
+-      set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -ffixed-line-length-132 -fno-second-underscore")
++      set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -ffixed-line-length-132 -fno-second-underscore -fallow-invalid-boz")
+     endif()
+   endif()
+ endif()
