@@ -33,7 +33,7 @@ class Freesurfer(Package):
 
     depends_on("mesa-glu")
     depends_on("qt+opengl@4.7:", when='@:8.0.99')
-    depends_on("qt+opengl@5.15:", when='@8.1.0', type=('link', 'build')) 
+    depends_on("qt+opengl@5.15:", when='@8.1.0', type=('link')) 
     #depends_on("vtk@8.2.0", when='@8.1.0', type=('link', 'build')) 
     #depends_on("qt")
     depends_on("tcsh")
@@ -44,8 +44,8 @@ class Freesurfer(Package):
     depends_on("git", type="build", when='@8.1.0')
     depends_on("git-annex", type="build", when='@8.1.0')
     #depends_on("minc-toolkit", type=("build", "link"), when='@8.1.0')
-    depends_on("python@3.8:", type=("build" ,"link", "run"), when='@8.1.0')
-    depends_on("py-pip", type=("build" ,"link", "run"), when='@8.1.0')
+    #depends_on("python@3.8:", type=("build" ,"link", "run"), when='@8.1.0')
+    #depends_on("py-pip", type=("build" ,"link", "run"), when='@8.1.0')
 
     def url_for_version(self, version):
         return "https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/{0}/freesurfer-linux-centos7_x86_64-{1}.tar.gz".format(
@@ -56,6 +56,7 @@ class Freesurfer(Package):
         source_file = join_path(self.prefix, "SetUpFreeSurfer.sh")
         env.prepend_path("PATH", self.prefix.bin)
         env.set("FREESURFER_HOME", self.prefix)
+        env.set("FREESURFER", self.prefix)
         env.set("SUBJECTS_DIR", join_path(self.prefix, "subjects"))
         env.set("FUNCTIONALS_DIR", join_path(self.prefix, "sessions"))
         env.append_path("PERL5LIB", join_path(self.prefix, "mni/share/perl5"))
@@ -100,7 +101,10 @@ class Freesurfer(Package):
             cmake_args += [f"-DCMAKE_CXX_STANDARD=17", f"-DCMAKE_VERBOSE_MAKEFILE=ON"]
             cmake_args += [f"-DCMAKE_INSTALL_PREFIX={prefix}"]
             cmake_args += [f"-DCMAKE_BUILD_TYPE=Release"]
+            cmake_args += [f"-DCMAKE_VERBOSE_MAKEFILE=ON"]
             cmake_args += [f"-DINFANT_MODULE=ON"]
+            cmake_args += [f"-DDISTRIBUTE_FSPYTHON=ON"]
+            cmake_args += [f"-DPYTHON_EXECUTABLE={fs_packages_dir}/fspython/3.8/bin/python3"]
             cmake_args += [f"-DFS_PACKAGES_DIR={fs_packages_dir}", f"-DITK_DIR={fs_packages_dir}/itk/5.4.5", f"-DVTK_DIR={fs_packages_dir}/vtk/8.2/", f"-DANN_DIR={fs_packages_dir}/ann/1.1.2"]
             with working_dir("spack-build", create=True):
                 cmake("..", *cmake_args)

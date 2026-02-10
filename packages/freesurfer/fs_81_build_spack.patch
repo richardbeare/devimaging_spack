@@ -69,7 +69,7 @@ index 80d37fa728..2611ef46f3 100755
      # if the build runs smoothly, save the tarball MD5
      with open(md5_filename, "w") as f: f.write(md5_current)
 diff --git a/packages/source/build_itk.sh b/packages/source/build_itk.sh
-index 3d14260c52..35f7797178 100755
+index 3d14260c52..484699b632 100755
 --- a/packages/source/build_itk.sh
 +++ b/packages/source/build_itk.sh
 @@ -1,4 +1,4 @@
@@ -87,6 +87,13 @@ index 3d14260c52..35f7797178 100755
    -DITK_BUILD_DEFAULT_MODULES:BOOL=OFF \
    -DITKGroup_Core:BOOL=ON \
    -DITKGroup_Filtering:BOOL=ON \
+@@ -52,5 +50,5 @@ cmake ../ITK \
+ 
+ # cmake --build . --target all -j 8
+ # Preserve log output order, maybe easier to check for errors
+-cmake --build . --target all -j1
++cmake --build . --target all -j8
+ cmake --build . --target install
 diff --git a/packages/source/build_petsc.sh b/packages/source/build_petsc.sh
 index b432d284a3..803c490c8b 100755
 --- a/packages/source/build_petsc.sh
@@ -133,65 +140,18 @@ index a862ed40c9..979115d00d 100755
  cmake --build . --target all -j 8
  cmake --build . --target install
 diff --git a/python/req.sh b/python/req.sh
-index 159d4e881d..2ca6e79b36 100755
+index 159d4e881d..d9ffdf643f 100755
 --- a/python/req.sh
 +++ b/python/req.sh
-@@ -139,6 +139,7 @@ fi
- python_binary="$FSPYTHON_INSTALL_PREFIX/python/bin/python3"
+@@ -140,6 +140,8 @@ python_binary="$FSPYTHON_INSTALL_PREFIX/python/bin/python3"
  # nvidia_subdir="$install_path/python/lib/python3.8/site-packages/nvidia"
  nvidia_subdir="$FSPYTHON_INSTALL_PREFIX/python/lib/python3.8/site-packages/nvidia"
-+python_library="$FSPYTHON_INSTALL_PREFIX/python/packages"
  
++echo "req: $python_binary"
++
  if [ $generate -eq 1 ]; then
     # If requirements files not soft links and modified, then stop and do not clobber
-@@ -180,7 +181,7 @@ if [ $generate -eq 1 ]; then
-    # $python_binary -m pip freeze | sort | uniq | sed 's; @ ;@;g' | sed 's;^qatools.*;#&;' | sed 's;^pyfs.*;#&;' | sed 's;^nvidia.*;#&;' | sed 's;^triton.*;#&;' | sed 's;voxelmorph==.*;'${voxelmorph_url_when_version_invalid}';' | sed 's;neurite==.*;'${neurite_url_when_version_invalid}';' | sed 's;pystrum==.*;'${pystrum_url_when_version_invalid}';' > $build_req_new
- 
-    ## need URL for spheremorph and addition of fsutil breaks solving requirements
--   $python_binary -m pip freeze | sort | uniq | sed 's; @ ;@;g' | sed 's;^qatools.*;#&;' | sed 's;^pyfs.*;#&;' | sed 's;^nvidia.*;#&;' | sed 's;^triton.*;#&;' | sed 's;^fsutil.*;#&;' | sed 's;voxelmorph==.*;'${voxelmorph_url_when_version_invalid}';' | sed 's;neurite==.*;'${neurite_url_when_version_invalid}';' | sed 's;pystrum==.*;'${pystrum_url_when_version_invalid}';' | sed 's;spheremorph==.*;'${spheremorph_url_when_version_invalid}';' | sed 's;^torch==.*cpu;--find-links '${torch_cpu_url}'\n&;' > $build_req_new
-+   $python_binary -m pip freeze  --path $python_library| sort | uniq | sed 's; @ ;@;g' | sed 's;^qatools.*;#&;' | sed 's;^pyfs.*;#&;' | sed 's;^nvidia.*;#&;' | sed 's;^triton.*;#&;' | sed 's;^fsutil.*;#&;' | sed 's;voxelmorph==.*;'${voxelmorph_url_when_version_invalid}';' | sed 's;neurite==.*;'${neurite_url_when_version_invalid}';' | sed 's;pystrum==.*;'${pystrum_url_when_version_invalid}';' | sed 's;spheremorph==.*;'${spheremorph_url_when_version_invalid}';' | sed 's;^torch==.*cpu;--find-links '${torch_cpu_url}'\n&;' > $build_req_new
- 
-    if [ $(wc -l < $build_req_new) -eq 0 ]; then
-       echo "$s: $build_req_new has no entries so cannot use it to update requirements-build.txt"
-@@ -281,8 +282,10 @@ if [ $torchcpu -eq 1 ]; then
-    ## Does not look like there is a way to specify the latest version of the torch cpu package
-    ## in requirements-extra.txt, e.g., torch==*.cpu
-    # func_setup_fspython
--   torch_rev=`$python_binary -m pip freeze | grep torch | sed 's;^.*==;;'`
-+   torch_rev=`$python_binary -m pip freeze --path $python_library | grep torch | sed 's;^.*==;;'`
-+   echo "torch_rev: $torch_rev"
-    torch_rev_numeric=`echo $torch_rev| sed 's;\+.*;;'`
-+   echo "torch_rev_numeric: $torch_rev_numeric"
-    if [ "${torch_rev}" == "${torch_rev_numeric}+cpu" ]; then
-       echo "$s: ${torch_rev} already installed - nothing to do."
-    else
-@@ -312,11 +315,11 @@ if [ $uninstall -eq 1 ]; then
-    ## remove triton
-    ## replace torch with torch+cpu version (no cuda libs) via --libtorch arg above
-    # $python_binary -m pip freeze | grep "^nvidia\|^triton\|^torch" > /dev/null
--   $python_binary -m pip freeze | grep "^nvidia\|^triton" > /dev/null
-+   $python_binary -m pip freeze  --path $python_library| grep "^nvidia\|^triton" > /dev/null
-    if [ $? -eq 0 ]; then
-       if [ ! -e ./postinstall.list ]; then touch postinstall.list; fi
-       # $python_binary -m pip freeze | grep '^nvidia\|^triton\|^torch' | sed 's;==.*;;' >> postinstall.list
--      $python_binary -m pip freeze | grep '^nvidia\|^triton' | sed 's;==.*;;' >> postinstall.list
-+      $python_binary -m pip freeze --path $python_library | grep '^nvidia\|^triton' | sed 's;==.*;;' >> postinstall.list
-    else
-       echo "$s: Found nothing to uninstall for nvidia and triton in output from pip freeze."
-    fi
-@@ -363,10 +366,10 @@ if [ $uninstall -eq 1 ]; then
-       fi
-    fi
- 
--   $python_binary -m pip freeze | grep "^tensorflow" > /dev/null
-+   $python_binary -m pip freeze  --path $python_library| grep "^tensorflow" > /dev/null
-    if [ $? -eq 0 ]; then
-       echo "$s tensorflow modulues currently installed:"
--      $python_binary -m pip freeze | grep "^tensorflow"
-+      $python_binary -m pip freeze  --path $python_library| grep "^tensorflow"
-    else
-       echo "$s: Found no tensorflow modules installed - exiting."
-       exit 1
+    if [ ! -L  requirements.txt ]; then
 diff --git a/resurf/CMakeLists.txt b/resurf/CMakeLists.txt
 index 1060ff9505..08f1525e33 100644
 --- a/resurf/CMakeLists.txt
